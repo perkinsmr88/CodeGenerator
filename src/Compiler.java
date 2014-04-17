@@ -17,30 +17,31 @@ public class Compiler
     {
         ArrayDeque<imAtoken> parseMe = new ArrayDeque<imAtoken>();// collection of analyzed pieces to be parsed
         String conti   = ""; //Can it be parsed?
-        int[] x = new int[10];
 
-        try {
-
+        try
+        {
+            //Call the Lexical analyzer----------------------------------------
             Lex lex = new Lex(); //Lexical Analyzer creation
             parseMe = lex.run(args); //Create the string from the lexical analyzer
 
-            //Call the Parser------------------------------------------------
-
-            /*Parser parser = new Parser();  //Parser creation
-            conti = parser.run(parseMe, functionList, conti);   //run through parser*/
-
             //Call the Code Generator----------------------------------------
-            CodeGen codeGen = new CodeGen();
-            conti = codeGen.run(parseMe);
-
-            //Print Successful Result-----------------------------------------
-
-            System.out.println(conti);
+            CodeGen codeGen = new CodeGen(); //Code generator creation
+            conti = codeGen.run(parseMe); //run the tokens through a code generator
         }
         catch(Exception e)
         {
+            //report file error
             System.out.println("Somethings wrong with the test file, chief\n");
-           e.printStackTrace();
+
+            //print stacktrace
+            System.out.println("StackTrace: ");
+            e.printStackTrace();
+
+            //exit the program cleanly
+            System.exit(0);
         }
+
+        //Print Successful Result-----------------------------------------
+        System.out.println("\n" + conti); //If successful, print it to the screen
     }
 }

@@ -23,10 +23,12 @@ public class Lex
     public ArrayDeque<imAtoken> run(String[] args)
     {
 
-        File file = new File("C:\\Users\\Drivenwanderer\\Documents\\GitHub\\Code Generator\\Test Files\\cg2");
+
 
         try
         {
+            //grab the file to be compiled
+            File file = new File("C:\\Users\\g00002046\\Documents\\GitHub\\CodeGenerator\\Test Files\\cg2");
             //File file = new File(args[0]);
 
             Scanner scanner =  new Scanner(file); //File Scanner

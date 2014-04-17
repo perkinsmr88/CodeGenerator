@@ -1015,7 +1015,7 @@ public class CodeGen
                 operand1.add("");
 
                 //Create a temporary variable for storing data
-                prevcalcs = genTemp();
+                prevcalcs = makeTemp();
 
                 //make that temp variable the result of the Mul/Div
                 result.add(prevcalcs);
@@ -1125,7 +1125,7 @@ public class CodeGen
                 term(x);
 
                 //create an iterated temp variable
-                prevcalcs = genTemp();
+                prevcalcs = makeTemp();
 
                 //add that variable to the result list
                 result.add(prevcalcs);
@@ -1421,7 +1421,7 @@ public class CodeGen
 
 //---------------------------------------------------------------------------------------------------------------
 
-    public String genTemp()
+    public String makeTemp()
     {
         //create a temp variable with an iterated number
         gen = "t" + genCount;
@@ -1438,14 +1438,18 @@ public class CodeGen
     void printCode()
     {
         //create the display headers
-        System.out.println("OP            op1           op2          result");
-        System.out.println("-----------------------------------------------");
+        System.out.println("  Operator       Op1           Op2          Result");
+        System.out.println("------------------------------------------------");
 
         //print out the generated code
         for(int i = 0; i < operator.size(); i++)
         {
-            System.out.println(String.format("%-7s        %-3s          %-3s          %-5s", operator.get(i),operand1.get(i),operand2.get(i),result.get(i)));
+            //print the formatted columns from each list under their respective headers
+            System.out.println(String.format((i+1) + "  %-7s        %-4s          %-4s          %-5s", operator.get(i),operand1.get(i),operand2.get(i),result.get(i)));
         }
+
+        //Close the generated Code
+        System.out.println("------------------------------------------------");
     }
 
 }
