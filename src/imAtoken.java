@@ -9,7 +9,6 @@ public class imAtoken
     String name;
     int depth;
     int line;
-    String token = "";
 
     public imAtoken(String t, String am, int d, int l)
     {
@@ -21,7 +20,10 @@ public class imAtoken
 
     public imAtoken(String t)
     {
-       token = t; //name
+       name = t; //name
+        type = "ID";
+        depth = -1;
+        line = -1;
     }
 
     public String toString()

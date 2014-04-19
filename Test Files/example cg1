@@ -1,0 +1,20 @@
+1         func           main           void           0
+2         alloc          4                             x
+3         alloc          4                             y
+4         alloc          4                             z
+5         alloc          4                             m
+6         add            x              3              _t0
+7         comp           _t0            5              _t1
+8         BRLEQ          _t1                           20
+9         block
+10        div            m              z              _t2
+11        add            y              _t2            _t3
+12        assign         _t3                           x
+13        sub            x              y              _t4
+14        times          z              m              _t5
+15        div            _t5            z              _t6
+16        add            _t4            _t6            _t7
+17        assign         _t7                           m
+18        end            block
+19        BR                                           6
+20        end            func           main

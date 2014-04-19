@@ -1,11 +1,11 @@
 int sub(int x)
 {
-   return(x+x);
+   return(x*x);
 }
 void main(void)
 {
   int x;
-  int y[5];
-  y = 3;//sub(x);
+  int y;
+  y = sub(x);
 }
 

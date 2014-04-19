@@ -28,7 +28,7 @@ public class Lex
         try
         {
             //grab the file to be compiled
-            File file = new File("C:\\Users\\Drivenwanderer\\Documents\\GitHub\\CodeGenerator\\Test Files\\cg2");
+            File file = new File("C:\\Users\\Drivenwanderer\\Documents\\GitHub\\CodeGenerator\\Test Files\\cg1");
             //File file = new File(args[0]);
 
             Scanner scanner =  new Scanner(file); //File Scanner
