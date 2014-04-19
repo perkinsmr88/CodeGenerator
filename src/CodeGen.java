@@ -1,10 +1,8 @@
-import org.omg.DynamicAny._DynArrayStub;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 
 /**
- * Created by michaelperkins on 4/4/14.
+ * Created by Michael Perkins.
  */
 public class CodeGen
 {
@@ -18,24 +16,41 @@ public class CodeGen
     String prevAssn; //variable for assignment
     String gen; //temp variable
     int genCount = 1; //number of temp variable
-    boolean turn = true;
     String currentFunc;
     String funcType;
     String prevcalcs;
     int paraCounter = 0;
+    String num = "";
+    String rel = "";
 
 //---------------------------------------------------------------------------------------------------------------
 
     public String run(ArrayDeque<imAtoken> x)
     {
-        while(!x.isEmpty())
+        try
         {
-            program(x);
+            while (!x.isEmpty())
+            {
+                program(x);
+            }
+        }
+        catch(Exception e)
+        {
+            //report bad test file
+            System.out.println("Bad Code, Bro\n");
+
+            //Print error message
+            System.out.println(e);
+
+            //end the program cleanly
+            System.exit(0);
         }
 
+        //Print out generated code
         printCode();
 
-        return "Code Generated";
+        //End Message
+        return "Code Successfully Generated";
     }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -142,6 +157,18 @@ public class CodeGen
             {
                 x.pop();
 
+                //clone current stack to...
+                ArrayDeque<imAtoken> y = x.clone();
+
+                //find parameters without destroying everything
+                params2(y);
+
+                //Count the number of parameters
+                result.add(Integer.toString(paraCounter));
+
+                //reset ParaCounter
+                paraCounter = 0;
+
                 params(x);
 
                 if(!x.isEmpty())
@@ -150,12 +177,6 @@ public class CodeGen
 
                     if(token.name.equals(")"))
                     {
-                        //Count the number of parameters
-                        result.add(Integer.toString(paraCounter));
-
-                        //reset ParaCounter
-                        paraCounter = 0;
-
                         //remove end token
                         x.pop();
 
@@ -191,26 +212,6 @@ public class CodeGen
 
             if(token.name.equals("int") || token.name.equals("float"))
             {
-
-                //add Param to the operator List
-                operator.add("PARAM");
-
-                //operands are currently empty
-                operand1.add("");
-                operand2.add("");
-
-                //the result is currently empty
-                result.add("");
-
-                //add a parameter allocation to the operator list
-                operator.add("ALLOC P");
-
-                //operand 1 is the size allocation for an int or float
-                operand1.add("4");
-
-                //operand 2 is not used here
-                operand2.add("");
-
                 //remove the token
                 x.pop();
 
@@ -220,16 +221,33 @@ public class CodeGen
 
                     if(token.type.equals("ID"))
                     {
-                        paraCounter++;
+                       //remove the token
+                        x.pop();
+
+                        //add Param to the operator List
+                        operator.add("PARAM");
+
+                        //operands are currently empty
+                        operand1.add("");
+                        operand2.add("");
+
+                        //the result is currently empty
+                        result.add("");
+
+                        //add a parameter allocation to the operator list
+                        operator.add("ALLOC");
+
+                        //operand 1 is the size allocation for an int or float
+                        operand1.add("4");
+
+                        //operand 2 is not used here
+                        operand2.add("");
 
                         //set tempID equal to current token
                         tempID = token.name;
 
                         //add the ID to the result list
                         result.add(tempID);
-
-                        //remove the token
-                        x.pop();
 
                         paramType(x);
 
@@ -250,6 +268,62 @@ public class CodeGen
                     x.pop();
 
                     parameter(x);
+                }
+                else
+                {
+                    System.out.println("Error4: Expected int, float, or void but found " + token + " on line "  + token.line);
+                    System.exit(0);
+                }
+            }
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------------------
+
+    public void params2(ArrayDeque<imAtoken> y)
+    {
+        //params-> int ID paramtype parLoop | float ID paramtype parLoop | void parameter
+
+        if(!y.isEmpty())
+        {
+            imAtoken token = y.peek();
+
+            if(token.name.equals("int") || token.name.equals("float"))
+            {
+                //remove the token
+                y.pop();
+
+                if(!y.isEmpty())
+                {
+                    token = y.peek();
+
+                    if(token.type.equals("ID"))
+                    {
+                        //increment parameter counter
+                        paraCounter++;
+
+                        //remove the token
+                        y.pop();
+
+                        paramType(y);
+
+                        parLoop(y);
+                    }
+                }
+                else
+                {
+                    System.out.println("Error: Out of Tokens");
+                    System.exit(0);
+                }
+            }
+            else
+            {
+                if(token.name.equals("void"))
+                {
+                    //remove token
+                    y.pop();
+
+                    parameter(y);
                 }
                 else
                 {
@@ -353,6 +427,16 @@ public class CodeGen
 
                     if(token.name.equals("]"))
                     {
+                        //operand one holds the allocation size for the array
+                        operand1.add(Integer.toString(Integer.parseInt(num) * 4));
+
+                        //operand 2 isnt used here
+                        operand2.add("");
+
+                        //add the tempId to the result list
+                        result.add(tempID);
+
+
                         x.pop();
 
                         token = x.peek();
@@ -397,16 +481,7 @@ public class CodeGen
             if(token.type.equals("float") ||  token.type.equals("int"))
             {
                 //calculate and store the allocation size for the array
-                String arraySize = Integer.toString(Integer.parseInt(token.name) * 4);
-
-                //operand one holds the allocation size for the array
-                operand1.add(arraySize);
-
-                //operand 2 isnt used here
-                operand2.add("");
-
-                //add the tempId to the result list
-                result.add(tempID);
+                num = token.name;
 
                 //remove the current token
                 x.pop();
@@ -642,6 +717,18 @@ public class CodeGen
             }
             else
             {
+                ArrayList<imAtoken> expTokens = new ArrayList<imAtoken>();
+
+                ArrayDeque<imAtoken> y = x.clone();
+
+                while(!y.peek().name.equals(";"))
+                {
+                    expTokens.add(y.pop());
+                }
+
+                //Generate Code.
+                expresso(expTokens);
+
                 expression(x);
 
                 if(!x.isEmpty())
@@ -650,8 +737,6 @@ public class CodeGen
 
                     if(token.name.equals(";"))
                     {
-
-
                         x.pop();
                     }
                     else
@@ -872,7 +957,7 @@ public class CodeGen
                     System.exit(0);
                 }
             }
-            else if(token.type.equals("Int") || token.type.equals("Float"))
+            else if(token.type.equals("int") || token.type.equals("float"))
             {
                 NUM(x);
 
@@ -881,10 +966,10 @@ public class CodeGen
             else if(token.type.equals("ID"))
             {
                 //keep track of this ID for later
-                prevAssn = token.name;
+               // prevAssn = token.name;
 
                 //set operand1 to the current token
-                operand1.add(token.name);
+               // operand1.add(token.name);
 
                 x.pop();
 
@@ -1233,7 +1318,6 @@ public class CodeGen
 
                     if(token.name.equals(")"))
                     {
-
                         x.pop();
                     }
                 }
@@ -1438,18 +1522,280 @@ public class CodeGen
     void printCode()
     {
         //create the display headers
-        System.out.println("  Operator       Op1           Op2          Result");
-        System.out.println("------------------------------------------------");
+        System.out.println("#    Operator       Op1           Op2          Result");
+        System.out.println("------------------------------------------------------");
 
         //print out the generated code
         for(int i = 0; i < operator.size(); i++)
         {
             //print the formatted columns from each list under their respective headers
-            System.out.println(String.format((i+1) + "  %-7s        %-4s          %-4s          %-5s", operator.get(i),operand1.get(i),operand2.get(i),result.get(i)));
+            System.out.println(String.format("%-3s  %-7s        %-4s          %-4s          %-5s", (i + 1), operator.get(i), operand1.get(i), operand2.get(i), result.get(i)));
         }
 
         //Close the generated Code
-        System.out.println("------------------------------------------------");
+        System.out.println("------------------------------------------------------");
     }
+
+
+    public ArrayList<imAtoken> handleAddSub(ArrayList<imAtoken> y) 
+    {
+        int startLoc = 0;
+        boolean Search = true;
+
+        while (Search) 
+        {
+            String symbol = "";
+
+            for (int i = 0; i < y.size(); i++) 
+            {
+                if (y.get(i).name.equals("+") || y.get(i).name.equals("-")) 
+                {
+                    startLoc = i;
+                    symbol = y.get(i).name;
+                }
+            }
+
+            //if neither +/- is found then there is nothing more to be done here
+            if (startLoc == 0) 
+            {
+                //break the while loop and leave
+                Search = false;
+                break;
+            }
+
+            //Assign operator accordingly
+            if (symbol.equals("+")) 
+            {
+                operator.add("add");
+            }
+            else if (symbol.equals("-"))
+            {
+                operator.add("sub");
+            }
+
+            //Assign the operands and result
+            operand1.add(y.get(startLoc - 1).name);
+            operand2.add(y.get(startLoc + 1).name);
+            result.add(makeTemp());
+
+
+
+            imAtoken replace = new imAtoken("t" + gen);
+
+            //add the temporary token to the list
+            y.add(startLoc - 1, replace);
+           
+            for (int j = 0; j < 3; j++) 
+            {
+                y.remove(startLoc);
+            }
+
+            //reset the startloc
+            startLoc = 0;
+        }
+
+        return y;
+    }
+
+    public ArrayList<imAtoken> handleMultDiv(ArrayList<imAtoken> y)
+    {
+        int startLoc = 0;
+        boolean Search = true;
+
+        while(Search)
+        {
+            String symbol = "";
+            for(int i = 0; i < y.size(); i++)
+            {
+                if (y.get(i).name.equals("*") || y.get(i).name.equals("/"))
+                {
+                    startLoc = i;
+                    symbol = y.get(i).name;
+                }
+            }
+
+            if(startLoc == 0)
+            {
+                Search = false;
+                break;
+            }
+
+            if(symbol.equals("*"))
+            {
+                operator.add("mul");
+            }
+            else if(symbol.equals("/"))
+            {
+                operator.add("div");
+            }
+
+            operand1.add(y.get(startLoc - 1).name);
+            operand2.add(y.get(startLoc + 1).name);
+            result.add(makeTemp());
+
+            imAtoken replace = new imAtoken("t" + gen);
+
+            y.add(startLoc-1, replace);
+
+            for(int j = 0; j < 3; j++)
+            {
+                y.remove(startLoc);
+            }
+
+            startLoc = 0;
+        }
+
+        return y;
+    }
+
+    public ArrayList<imAtoken> handleParens(ArrayList<imAtoken> y)
+    {
+        boolean keepSearching = true;
+        int depth = 0;
+        int startLoc = 0;
+        int endingLoc = 0;
+
+
+        while(keepSearching)
+        {
+            for (int i = 0; i < y.size(); i++)
+            {
+                if (y.get(i).name.equals("("))
+                {
+                    depth++;
+                    startLoc = i;
+                }
+            }
+            if (depth == 0)
+                keepSearching = false;
+            if (depth != 0)
+            {
+                for (int k = startLoc; k < y.size(); k++)
+                {
+                    if (y.get(k).name.equals(")"))
+                    {
+                        endingLoc = k;
+                    }
+                }
+            }
+
+
+
+            ArrayList<imAtoken> working = new ArrayList<imAtoken>();
+
+            for (int i = 1; i < (endingLoc - startLoc); i++)
+            {
+                working.add(y.get(startLoc + i));
+            }
+
+            if (working.size() > 0)
+            {
+                working = handleMultDiv(working);
+                working = handleAddSub(working);
+
+                y.add(startLoc, working.get(0));
+
+                for(int i = endingLoc + 1; i > startLoc; i--)
+                {
+                    y.remove(i);
+                }
+
+
+            }
+            //reset locations and depths
+            endingLoc = 0;
+            startLoc = 0;
+            depth = 0;
+        }
+
+        return y;
+    }
+
+    public void expresso(ArrayList<imAtoken> y)
+    {
+        String assignedTo = ""; //temp variable
+        int position; //position of symbol in string
+        int relLoc; //
+
+        for(int i = 0; i < y.size(); i++)
+        {
+            if (y.get(i).name.equals("="))
+            {
+                position = i;
+                assignedTo = y.get(0).name;
+                handleParens(y);
+                handleMultDiv(y);
+                handleAddSub(y);
+
+                //Generate another row of code
+                operator.add("ASSIGN");
+                operand1.add(y.get(position + 1).name);
+                operand2.add("");
+                result.add(assignedTo);
+            }
+        }
+
+
+        for(int i = 0; i < y.size(); i++)
+        {
+            if(relopHunt(y.get(i).name))
+            {
+                rel = y.get(i).name;
+                relLoc = i;
+
+                ArrayList<imAtoken> leftside = new ArrayList<imAtoken>();
+                ArrayList<imAtoken> rightside = new ArrayList<imAtoken>();
+
+                //Create left side list
+                for(int l = 0; l < relLoc; l++)
+                {
+                    leftside.add(y.get(l));
+                }
+
+                //Create right side list
+                for(int j = relLoc + 1; j < y.size(); j++)
+                {
+                    rightside.add(y.get(j));
+                }
+
+                //Left Side Minimizing
+                handleParens(leftside);
+                handleMultDiv(leftside);
+                handleAddSub(leftside);
+
+                //Right Side Minimizing
+                handleParens(rightside);
+                handleMultDiv(rightside);
+                handleAddSub(rightside);
+
+                //Generate another row of code
+                operator.add("COMP");
+                operand1.add(leftside.get(0).name);
+                operand2.add(rightside.get(0).name);
+                result.add(makeTemp());
+            }
+        }
+
+    }
+
+    public boolean relopHunt(String symbol)
+    {
+        //Relative operator List
+        String[] reList = {"<", "<=", ">", ">=", "==", "!="};
+
+        //Search for a relative operator
+        for(int i = 0; i < reList.length; i++)
+        {
+            if(symbol.equals(reList[i]))
+            {
+                //if found, return true...
+                return true;
+            }
+        }
+
+        //...else return false
+        return false;
+    }
+
 
 }

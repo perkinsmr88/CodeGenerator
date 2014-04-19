@@ -5,7 +5,7 @@ int sub(int x)
 void main(void)
 {
   int x;
-  int y;
-  y = sub(x);
+  int y[5];
+  y = 3;//sub(x);
 }
 
